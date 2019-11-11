@@ -1,0 +1,121 @@
+// Project: React2Sound
+// Author : Usama Saqib
+// Date   : 11/11/2019
+// Note   : Feel free to modify the code as you see fit but credit would be appreciated :)
+
+import ddf.minim.*;
+import ddf.minim.analysis.*;
+
+Minim            minim;
+AudioInput       myAudio;
+//AudioInput     myAudio;
+FFT              myAudioFFT;
+
+boolean          showVisualizer = true;
+
+int              myAudioRange     = 250;
+int              myAudioMax       = 100;
+
+float            myAudioAmp       = 100.0;
+float            myAudioIndex     = 0.2;
+float            myAudioIndexAmp  = myAudioIndex;
+float            myAudioIndexStep = 0.35;
+
+float[]          myAudioData       = new float[myAudioRange];
+
+// ************************************************************************************
+
+int rect = 80;
+int x    = 40;
+int y    = 20;
+int y_   = rect;
+
+int[] nums = new int [16];
+
+color c = color(0, 0, 255);  // Define color 'c'
+
+// ************************************************************************************
+
+void setup(){
+  //size(1224,1000);
+  fullScreen(2);
+  background(#202020);
+  
+  minim = new Minim(this);
+  myAudio = minim.getLineIn(Minim.MONO);
+  
+  myAudioFFT = new FFT(myAudio.bufferSize(),myAudio.sampleRate());
+  myAudioFFT.linAverages(myAudioRange);
+  myAudioFFT.window(FFT.GAUSS);
+  
+  for (int i=0; i<nums.length;i++)
+ {
+   nums[i] = 70;
+ }
+}
+
+void draw(){
+ myAudioFFT.forward(myAudio.mix);
+ myAudioDataUpdate();
+ 
+ background(#202020);
+ fill(255,255);
+ stroke(1);
+ round(5);
+ 
+ for (int i = 0; i< nums.length; i++)
+ {
+   float greenValue = green(c);  // Get green in 'c'
+   int fftFillColor = (int)map(myAudioData[i], 0, myAudioMax, 0, 255);
+   fill(fftFillColor, greenValue,0,255);
+   
+//   rect(x,y,rect,rect);
+   rect(x+i*rect, y ,nums[i], nums[i]);
+   rect(x+i*rect, y+y_, nums[i], nums[i]);
+   rect(x+i*rect, y+y_*2, nums[i], nums[i]);
+   rect(x+i*rect, y+y_*3, nums[i], nums[i]);
+   rect(x+i*rect, y+y_*4, nums[i], nums[i]);
+   rect(x+i*rect, y+y_*5, nums[i], nums[i]);
+   rect(x+i*rect, y+y_*6, nums[i], nums[i]);
+   rect(x+i*rect, y+y_*7, nums[i], nums[i]);
+  
+ }
+ if (showVisualizer) myAudioDataWidget();
+}
+
+void myAudioDataUpdate()
+{
+  for(int i=0; i<myAudioRange; ++i)
+  {
+    float tempIndexAvg = (myAudioFFT.getAvg(i)*myAudioAmp)*myAudioIndexAmp;
+    float tempIndexCon = constrain(tempIndexAvg, 0, myAudioMax);
+    myAudioData[i] = tempIndexCon;
+    myAudioIndexAmp+=myAudioIndexStep;
+  }
+  myAudioIndexAmp = myAudioIndex;
+}
+
+void myAudioDataWidget()
+{
+  stroke(10);
+  fill(0, 255);
+  rect(0, height-112, width, 102);
+  
+  for(int i=0;i<myAudioRange; ++i)
+  {
+    if(i==0) fill(#237D26);
+    else if(i==3) fill(#80C41C);
+    //else fill(#CCCCCC);
+    else fill(#80C41C);
+    
+    rect(10 + (i*5), (height-myAudioData[i])-11, 4, myAudioData[i]);
+    
+  }
+}
+
+void stop()
+{
+  myAudio.close();
+  minim.stop();
+  super.stop();
+}
